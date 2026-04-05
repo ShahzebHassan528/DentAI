@@ -6,13 +6,25 @@ __pycache__/
 *.pyc
 *.pyo
 .env
+venv/
+*.egg-info/
 
 # Model weights (large files)
 *.pt
 *.pth
 *.h5
 *.pkl
+*.bin
+
+# Node / React
+node_modules/
+dist/
+.next/
 
 # IDE
 .vscode/
 .idea/
+
+# OS
+.DS_Store
+Thumbs.db
