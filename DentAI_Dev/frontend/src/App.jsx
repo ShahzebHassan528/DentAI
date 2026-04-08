@@ -1,19 +1,34 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
+import Navbar from './components/Navbar'
+import ProtectedRoute from './components/ProtectedRoute'
+import Landing from './pages/Landing'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Predict from './pages/Predict'
+import Treatments from './pages/Treatments'
+import PatientDashboard from './pages/PatientDashboard'
+import DoctorDashboard from './pages/DoctorDashboard'
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div className="flex items-center justify-center min-h-screen text-2xl font-bold text-teal-400">
-              DentAI — Day 1 Scaffold ✅
-            </div>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <ToastProvider>
+        <BrowserRouter>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/predict" element={<ProtectedRoute><Predict /></ProtectedRoute>} />
+            <Route path="/treatments/:condition" element={<ProtectedRoute><Treatments /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><PatientDashboard /></ProtectedRoute>} />
+            <Route path="/doctor" element={<ProtectedRoute><DoctorDashboard /></ProtectedRoute>} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
+    </AuthProvider>
   )
 }
 
