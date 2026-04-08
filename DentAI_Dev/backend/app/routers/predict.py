@@ -1,5 +1,7 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+import uuid
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ml.predict import predict_image, predict_text, predict_combined
 from app.schemas.predict import (
@@ -8,6 +10,11 @@ from app.schemas.predict import (
     TextPredictResponse,
     CombinedPredictResponse,
 )
+from app.core.deps import get_current_user
+from app.core.database import get_db
+from app.models.user import User
+from app.services.cloudinary_service import upload_xray
+from app.services.prediction_service import save_prediction
 
 router = APIRouter()
 
@@ -31,6 +38,8 @@ def _validate_image(file: UploadFile) -> None:
 )
 async def predict_from_image(
     file: UploadFile = File(..., description="Dental X-ray image (JPEG/PNG/WebP/BMP, max 10 MB)"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     _validate_image(file)
     image_bytes = await file.read()
@@ -44,6 +53,23 @@ async def predict_from_image(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
 
+    # Upload to Cloudinary
+    image_url = None
+    try:
+        image_url = upload_xray(image_bytes, filename=f"user_{current_user.id}_{uuid.uuid4().hex[:8]}")
+    except Exception:
+        pass  # Cloudinary upload failure should not block diagnosis
+
+    # Save to DB
+    await save_prediction(
+        db,
+        user_id=current_user.id,
+        final_diagnosis=result["diagnosis"],
+        confidence=result["confidence"],
+        image_url=image_url,
+        image_diagnosis=result["diagnosis"],
+    )
+
     return result
 
 
@@ -52,13 +78,26 @@ async def predict_from_image(
     response_model=TextPredictResponse,
     summary="Diagnose from patient symptom description",
 )
-async def predict_from_text(body: TextPredictRequest):
+async def predict_from_text(
+    body: TextPredictRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     try:
         result = predict_text(body.symptoms)
     except FileNotFoundError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
+
+    await save_prediction(
+        db,
+        user_id=current_user.id,
+        final_diagnosis=result["diagnosis"],
+        confidence=result["confidence"],
+        symptoms=body.symptoms,
+        text_diagnosis=result["diagnosis"],
+    )
 
     return result
 
@@ -72,6 +111,8 @@ async def predict_combined_endpoint(
     file: Optional[UploadFile] = File(None, description="Dental X-ray image (optional)"),
     symptoms: Optional[str] = Form(None, min_length=3, max_length=2000,
                                    description="Symptom description (optional)"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     if file is None and (symptoms is None or not symptoms.strip()):
         raise HTTPException(
@@ -93,4 +134,36 @@ async def predict_combined_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
 
+    # Upload image to Cloudinary if provided
+    image_url = None
+    if image_bytes is not None:
+        try:
+            image_url = upload_xray(image_bytes, filename=f"user_{current_user.id}_{uuid.uuid4().hex[:8]}")
+        except Exception:
+            pass
+
+    await save_prediction(
+        db,
+        user_id=current_user.id,
+        final_diagnosis=result["final_diagnosis"],
+        confidence=result["confidence"],
+        image_url=image_url,
+        symptoms=symptoms,
+        image_diagnosis=result.get("image_diagnosis"),
+        text_diagnosis=result.get("text_diagnosis"),
+    )
+
     return result
+
+
+@router.get(
+    "/history",
+    summary="Get current user's prediction history",
+)
+async def prediction_history(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.prediction_service import get_user_predictions
+    predictions = await get_user_predictions(db, current_user.id)
+    return predictions
