@@ -109,66 +109,92 @@ export default function PatientDashboard() {
                   <div key={p.id} className="anim-fade-up" style={{
                     animationDelay: `${i * 0.05}s`,
                     background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px',
-                    padding: '20px 24px', display: 'flex', gap: '16px', alignItems: 'flex-start',
+                    padding: '20px 24px',
                     transition: 'box-shadow 0.2s, border-color 0.2s',
                   }}
                     onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 28px rgba(15,23,42,0.09)'; e.currentTarget.style.borderColor = c.border }}
                     onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = '#e2e8f0' }}
                   >
-                    {/* Thumbnail */}
-                    <div style={{
-                      width: '72px', height: '72px', borderRadius: '12px', flexShrink: 0, overflow: 'hidden',
-                      background: '#f8fafc', border: '1px solid #e2e8f0',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {p.image_url
-                        ? <img src={p.image_url} alt="xray" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        : <span style={{ fontSize: '1.8rem' }}>💬</span>
-                      }
-                    </div>
-
-                    {/* Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '6px',
-                          padding: '4px 12px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 700,
-                          background: c.bg, border: `1px solid ${c.border}`, color: c.color, textTransform: 'capitalize',
-                        }}>
-                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: c.dot }} />
-                          {p.final_diagnosis}
-                        </span>
-                        <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{formatDate(p.created_at)}</span>
+                    {/* Flex row: thumbnail + info + action */}
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                      {/* Thumbnail */}
+                      <div style={{
+                        width: '72px', height: '72px', borderRadius: '12px', flexShrink: 0, overflow: 'hidden',
+                        background: '#f8fafc', border: '1px solid #e2e8f0',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {p.image_url
+                          ? <img src={p.image_url} alt="xray" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : <span style={{ fontSize: '1.8rem' }}>💬</span>
+                        }
                       </div>
 
-                      {p.symptoms && (
-                        <p style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5, marginBottom: '8px',
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '500px' }}>
-                          "{p.symptoms}"
-                        </p>
-                      )}
-
-                      {/* Confidence bar */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ flex: 1, maxWidth: '200px', background: '#f1f5f9', borderRadius: '999px', height: '5px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', background: c.dot, width: `${conf}%`, borderRadius: '999px' }} />
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            padding: '4px 12px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 700,
+                            background: c.bg, border: `1px solid ${c.border}`, color: c.color, textTransform: 'capitalize',
+                          }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: c.dot }} />
+                            {p.final_diagnosis}
+                          </span>
+                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{formatDate(p.created_at)}</span>
                         </div>
-                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>{conf}% confidence</span>
+
+                        {p.symptoms && (
+                          <p style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5, marginBottom: '8px',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '500px' }}>
+                            "{p.symptoms}"
+                          </p>
+                        )}
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ flex: 1, maxWidth: '200px', background: '#f1f5f9', borderRadius: '999px', height: '5px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', background: c.dot, width: `${conf}%`, borderRadius: '999px' }} />
+                          </div>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>{conf}% confidence</span>
+                        </div>
                       </div>
+
+                      {/* Action */}
+                      <Link to={`/treatments/${p.final_diagnosis}`} style={{
+                        flexShrink: 0, padding: '8px 16px', borderRadius: '10px',
+                        border: '1.5px solid #e2e8f0', color: '#64748b', fontSize: '0.8rem',
+                        fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s',
+                        alignSelf: 'center',
+                      }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#99f6e4'; e.currentTarget.style.color = '#0d9488' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b' }}
+                      >
+                        Treatment →
+                      </Link>
                     </div>
 
-                    {/* Action */}
-                    <Link to={`/treatments/${p.final_diagnosis}`} style={{
-                      flexShrink: 0, padding: '8px 16px', borderRadius: '10px',
-                      border: '1.5px solid #e2e8f0', color: '#64748b', fontSize: '0.8rem',
-                      fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s',
-                      alignSelf: 'center',
-                    }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#99f6e4'; e.currentTarget.style.color = '#0d9488' }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b' }}
-                    >
-                      Treatment →
-                    </Link>
+                    {/* Doctor Note — inside the card */}
+                    {p.doctor_note && (
+                      <div style={{
+                        marginTop: '14px', padding: '14px 16px', borderRadius: '12px',
+                        background: '#f0fdfa', border: '1.5px solid #99f6e4',
+                        display: 'flex', gap: '12px', alignItems: 'flex-start',
+                      }}>
+                        <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>👨‍⚕️</span>
+                        <div>
+                          <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0d9488', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '5px' }}>
+                            Doctor's Note
+                            {p.reviewed_at && (
+                              <span style={{ fontWeight: 500, color: '#94a3b8', marginLeft: '8px', textTransform: 'none', letterSpacing: 0 }}>
+                                · {formatDate(p.reviewed_at)}
+                              </span>
+                            )}
+                          </p>
+                          <p style={{ fontSize: '0.875rem', color: '#0f172a', lineHeight: 1.65 }}>
+                            {p.doctor_note}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })}

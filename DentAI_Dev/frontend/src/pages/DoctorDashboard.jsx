@@ -62,14 +62,25 @@ export default function DoctorDashboard() {
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 24px' }}>
 
         {/* Header */}
-        <div className="anim-fade-up" style={{ marginBottom: '32px' }}>
-          <p style={{ color: '#0d9488', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '8px' }}>
-            Doctor Dashboard
-          </p>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', marginBottom: '6px' }}>
-            Patient Predictions
-          </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>Review AI diagnoses and add clinical notes.</p>
+        <div className="anim-fade-up" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <p style={{ color: '#0d9488', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              Doctor Dashboard
+            </p>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', marginBottom: '6px' }}>
+              Patient Predictions
+            </h1>
+            <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>Review AI diagnoses and add clinical notes.</p>
+          </div>
+          <Link to="/metrics" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '10px 20px', borderRadius: '12px', textDecoration: 'none',
+            background: 'linear-gradient(135deg, #0d9488, #0891b2)',
+            color: '#fff', fontWeight: 700, fontSize: '0.85rem',
+            boxShadow: '0 2px 12px rgba(13,148,136,0.3)',
+          }}>
+            📊 Model Metrics
+          </Link>
         </div>
 
         {/* Stats */}
