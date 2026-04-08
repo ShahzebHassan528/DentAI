@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.routers import predict, treatments
 
 app = FastAPI(
     title="DentAI API",
@@ -18,14 +19,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(predict.router, prefix="/predict", tags=["predict"])
+app.include_router(treatments.router, prefix="/treatments", tags=["treatments"])
+
 
 @app.get("/health", tags=["health"])
 async def health_check():
     return {"status": "ok", "app": "DentAI API", "version": "1.0.0"}
-
-
-# Routers will be included here as they are built (Day 3+)
-# from app.routers import auth, predict, treatments
-# app.include_router(auth.router, prefix="/auth", tags=["auth"])
-# app.include_router(predict.router, prefix="/predict", tags=["predict"])
-# app.include_router(treatments.router, prefix="/treatments", tags=["treatments"])
