@@ -128,9 +128,23 @@ export default function PredictionResult({ result }) {
           </div>
         </div>
 
+        {/* Low-confidence warning */}
+        {result.uncertain && (
+          <div style={{
+            marginTop: '16px', padding: '12px 16px', borderRadius: '10px',
+            background: '#fffbeb', border: '1.5px solid #fde68a',
+            display: 'flex', gap: '10px', alignItems: 'flex-start',
+          }}>
+            <span style={{ fontSize: '1rem', flexShrink: 0 }}>⚠️</span>
+            <p style={{ fontSize: '0.8rem', color: '#92400e', lineHeight: 1.6, fontWeight: 600 }}>
+              Low confidence prediction. The model is uncertain about this result — please provide both an X-ray image and symptoms for a more accurate diagnosis, or consult a dentist directly.
+            </p>
+          </div>
+        )}
+
         {/* Disclaimer */}
         <div style={{
-          marginTop: '20px', padding: '12px 16px', borderRadius: '10px',
+          marginTop: '16px', padding: '12px 16px', borderRadius: '10px',
           background: '#f8fafc', border: '1px solid #e2e8f0',
           display: 'flex', gap: '10px', alignItems: 'flex-start',
         }}>

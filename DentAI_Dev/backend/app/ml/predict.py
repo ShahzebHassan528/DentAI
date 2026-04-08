@@ -29,6 +29,9 @@ IMG_SIZE = 480
 EFFNET_WEIGHT = 0.6
 BERT_WEIGHT   = 0.4
 
+# Confidence threshold — predictions below this are flagged as "uncertain"
+CONFIDENCE_THRESHOLD = 0.55
+
 # ── Singletons — loaded once on first call ────────────────────────────────────
 _effnet_model  = None
 _effnet_classes = None
@@ -97,10 +100,12 @@ def predict_image(image_bytes: bytes) -> dict:
         probs  = F.softmax(logits, dim=1).squeeze(0).cpu().tolist()
 
     idx = int(torch.tensor(probs).argmax())
+    confidence = round(probs[idx], 4)
     return {
         "diagnosis":     classes[idx],
-        "confidence":    round(probs[idx], 4),
+        "confidence":    confidence,
         "probabilities": {c: round(p, 4) for c, p in zip(classes, probs)},
+        "uncertain":     confidence < CONFIDENCE_THRESHOLD,
     }
 
 
@@ -156,10 +161,12 @@ def predict_text(symptoms: str) -> dict:
 
     idx = int(torch.tensor(probs).argmax())
     classes = list(model.config.id2label.values())
+    confidence = round(probs[idx], 4)
     return {
         "diagnosis":     classes[idx],
-        "confidence":    round(probs[idx], 4),
+        "confidence":    confidence,
         "probabilities": {c: round(p, 4) for c, p in zip(classes, probs)},
+        "uncertain":     confidence < CONFIDENCE_THRESHOLD,
     }
 
 
@@ -203,13 +210,15 @@ def predict_combined(image_bytes: bytes | None, symptoms: str | None) -> dict:
             for c in classes
         }
         best = max(fused, key=fused.get)
+        conf = round(fused[best], 4)
         return {
             "final_diagnosis": best,
-            "confidence":      round(fused[best], 4),
+            "confidence":      conf,
             "image_diagnosis": img_result["diagnosis"],
             "text_diagnosis":  text_result["diagnosis"],
             "probabilities":   fused,
             "mode":            "combined",
+            "uncertain":       conf < CONFIDENCE_THRESHOLD,
         }
 
     # Image only
@@ -221,6 +230,7 @@ def predict_combined(image_bytes: bytes | None, symptoms: str | None) -> dict:
             "text_diagnosis":  None,
             "probabilities":   img_result["probabilities"],
             "mode":            "image_only",
+            "uncertain":       img_result["uncertain"],
         }
 
     # Text only
@@ -231,4 +241,5 @@ def predict_combined(image_bytes: bytes | None, symptoms: str | None) -> dict:
         "text_diagnosis":  text_result["diagnosis"],
         "probabilities":   text_result["probabilities"],
         "mode":            "text_only",
+        "uncertain":       text_result["uncertain"],
     }

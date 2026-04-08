@@ -1,7 +1,11 @@
+import json
 import uuid
+from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
+
+METRICS_PATH = Path(__file__).parents[1] / "ml" / "weights" / "metrics.json"
 
 from app.ml.predict import predict_image, predict_text, predict_combined
 from app.schemas.predict import (
@@ -165,5 +169,88 @@ async def prediction_history(
     db: AsyncSession = Depends(get_db),
 ):
     from app.services.prediction_service import get_user_predictions
-    predictions = await get_user_predictions(db, current_user.id)
-    return predictions
+    from sqlalchemy.orm import selectinload
+    from sqlalchemy import select as sa_select
+    from app.models.prediction import Prediction as PredModel
+
+    result = await db.execute(
+        sa_select(PredModel)
+        .where(PredModel.user_id == current_user.id)
+        .options(selectinload(PredModel.report))
+        .order_by(PredModel.created_at.desc())
+    )
+    predictions = result.scalars().all()
+    return [
+        {
+            "id": p.id,
+            "final_diagnosis": p.final_diagnosis,
+            "confidence": p.confidence,
+            "image_url": p.image_url,
+            "symptoms": p.symptoms,
+            "image_diagnosis": p.image_diagnosis,
+            "text_diagnosis": p.text_diagnosis,
+            "created_at": p.created_at.isoformat(),
+            "doctor_note": p.report.doctor_notes if p.report else None,
+            "reviewed_at": p.report.reviewed_at.isoformat() if p.report else None,
+        }
+        for p in predictions
+    ]
+
+
+@router.get(
+    "/metrics",
+    summary="Get saved model evaluation metrics (doctor only)",
+)
+async def get_metrics(
+    current_user: User = Depends(get_current_user),
+):
+    from app.models.user import UserRole
+    if current_user.role != UserRole.doctor:
+        raise HTTPException(status_code=403, detail="Doctor role required.")
+
+    if not METRICS_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Metrics not generated yet. Run: python -m app.ml.evaluate"
+        )
+
+    with open(METRICS_PATH) as f:
+        return json.load(f)
+
+
+@router.get(
+    "/all",
+    summary="Doctor: get all patients' predictions",
+)
+async def all_predictions(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.models.user import UserRole
+    from sqlalchemy import select as sa_select
+    from app.models.prediction import Prediction as PredModel
+    from app.models.user import User as UserModel
+
+    if current_user.role != UserRole.doctor:
+        raise HTTPException(status_code=403, detail="Doctor role required.")
+
+    result = await db.execute(
+        sa_select(PredModel, UserModel)
+        .join(UserModel, UserModel.id == PredModel.user_id)
+        .order_by(PredModel.created_at.desc())
+    )
+    rows = result.all()
+    return [
+        {
+            "id": p.id,
+            "final_diagnosis": p.final_diagnosis,
+            "confidence": p.confidence,
+            "image_url": p.image_url,
+            "symptoms": p.symptoms,
+            "image_diagnosis": p.image_diagnosis,
+            "text_diagnosis": p.text_diagnosis,
+            "created_at": p.created_at.isoformat(),
+            "patient": {"id": u.id, "name": u.name, "email": u.email},
+        }
+        for p, u in rows
+    ]

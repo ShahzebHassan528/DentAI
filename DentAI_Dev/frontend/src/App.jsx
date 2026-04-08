@@ -10,6 +10,7 @@ import Predict from './pages/Predict'
 import Treatments from './pages/Treatments'
 import PatientDashboard from './pages/PatientDashboard'
 import DoctorDashboard from './pages/DoctorDashboard'
+import Metrics from './pages/Metrics'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/treatments/:condition" element={<ProtectedRoute><Treatments /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><PatientDashboard /></ProtectedRoute>} />
             <Route path="/doctor" element={<ProtectedRoute><DoctorDashboard /></ProtectedRoute>} />
+            <Route path="/metrics" element={<ProtectedRoute><Metrics /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </ToastProvider>
