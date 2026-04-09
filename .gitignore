@@ -9,12 +9,18 @@ __pycache__/
 venv/
 *.egg-info/
 
-# Model weights (large files)
+# Model weights (large files — store on Google Drive or Render Disk)
 *.pt
 *.pth
 *.h5
 *.pkl
 *.bin
+*.safetensors
+*.ckpt
+*.ot
+
+# Entire weights directory
+DentAI_Dev/backend/app/ml/weights/
 
 # Node / React
 node_modules/
@@ -28,3 +34,4 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+"DentAI_Dev/backend/app/ml/weights/" 
