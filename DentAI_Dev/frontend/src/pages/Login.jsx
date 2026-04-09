@@ -18,8 +18,18 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [focused, setFocused] = useState('')
 
+  function validate() {
+    if (!form.email.trim()) return 'Email address is required.'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Please enter a valid email address.'
+    if (!form.password) return 'Password is required.'
+    if (form.password.length < 6) return 'Password must be at least 6 characters.'
+    return null
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
+    const validationError = validate()
+    if (validationError) return setError(validationError)
     setError('')
     setLoading(true)
     try {

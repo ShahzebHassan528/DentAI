@@ -18,8 +18,21 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [focused, setFocused] = useState('')
 
+  function validate() {
+    if (!form.name.trim() || form.name.trim().length < 2) return 'Full name must be at least 2 characters.'
+    if (!form.email.trim()) return 'Email address is required.'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Please enter a valid email address.'
+    if (!form.password) return 'Password is required.'
+    if (form.password.length < 8) return 'Password must be at least 8 characters.'
+    if (!/[A-Z]/.test(form.password)) return 'Password must contain at least one uppercase letter.'
+    if (!/[0-9]/.test(form.password)) return 'Password must contain at least one number.'
+    return null
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
+    const validationError = validate()
+    if (validationError) return setError(validationError)
     setError('')
     setLoading(true)
     try {
@@ -125,18 +138,47 @@ export default function Register() {
                 PASSWORD
               </label>
               <input
-                type="password" required minLength={6}
+                type="password" required minLength={8}
                 value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
                 onFocus={() => setFocused('password')}
                 onBlur={() => setFocused('')}
-                placeholder="Min. 6 characters"
+                placeholder="Min. 8 characters"
                 style={{
                   ...inputStyle,
                   borderColor: focused === 'password' ? '#0d9488' : '#e2e8f0',
                   boxShadow: focused === 'password' ? '0 0 0 3px rgba(13,148,136,0.1)' : 'none',
                 }}
               />
+              {/* Password strength bar */}
+              {form.password.length > 0 && (() => {
+                const checks = [
+                  form.password.length >= 8,
+                  /[A-Z]/.test(form.password),
+                  /[0-9]/.test(form.password),
+                  /[^A-Za-z0-9]/.test(form.password),
+                ]
+                const score = checks.filter(Boolean).length
+                const labels = ['', 'Weak', 'Fair', 'Good', 'Strong']
+                const colors = ['', '#ef4444', '#f59e0b', '#3b82f6', '#10b981']
+                return (
+                  <div style={{ marginTop: '8px' }}>
+                    <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                      {[1,2,3,4].map(i => (
+                        <div key={i} style={{
+                          flex: 1, height: '3px', borderRadius: '999px',
+                          background: i <= score ? colors[score] : '#e2e8f0',
+                          transition: 'background 0.3s',
+                        }} />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: '0.72rem', color: colors[score], fontWeight: 600, margin: 0 }}>
+                      {labels[score]}
+                      {score < 4 && <span style={{ color: '#94a3b8', fontWeight: 400 }}> — add uppercase, number, or symbol</span>}
+                    </p>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Role */}
