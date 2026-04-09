@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from typing import List
 
 
 class Settings(BaseSettings):
@@ -19,7 +18,14 @@ class Settings(BaseSettings):
 
     # App
     APP_ENV: str = "development"
+
+    # FRONTEND_URL can be a single URL or comma-separated list
+    # e.g. "http://localhost:3000,https://dentai.vercel.app"
     FRONTEND_URL: str = "http://localhost:3000"
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        return [url.strip() for url in self.FRONTEND_URL.split(",") if url.strip()]
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

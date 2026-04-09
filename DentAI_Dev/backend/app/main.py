@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from app.core.config import settings
-from app.routers import predict, treatments, auth
+from app.routers import predict, treatments, auth, reports
 
 bearer_scheme = HTTPBearer()
 
@@ -16,7 +16,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +25,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(predict.router, prefix="/predict", tags=["predict"])
 app.include_router(treatments.router, prefix="/treatments", tags=["treatments"])
+app.include_router(reports.router, prefix="/reports", tags=["reports"])
 
 
 @app.get("/health", tags=["health"])
